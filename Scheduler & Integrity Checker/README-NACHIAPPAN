@@ -1,0 +1,41 @@
+PART A
+
+The scheduler is upgraded from round robin to priority based round robin. All new processes start at low priority and can be upgraded or downgraded using the system call setpri(). The scheduler has two types of ticks - hticks and lticks- representing the amount of time a pid has spent in high and low priority respectively.
+
+Execute the test program: 
+make qemu
+testpriority
+
+
+PART B 
+
+1. (File System Integrity Checker)
+
+The file system integrity check is done by creating a program that checks the file system image (.img file) that is created on xv6 startup. The file system checker needs to identify the following errors (from the project pdf):
+
+Each inode is either unallocated or one of the valid types (T_FILE, T_DIR, T_DEV). ERROR: bad inode.
+
+For in-use inodes, each address that is used by inode is valid (points to a valid datablock address within the image). Note: must check indirect blocks too, when they are in use. ERROR: bad address in inode.
+Root directory exists, and it is inode number 1. ERROR MESSAGE: root directory does not exist.
+Each directory contains . and .. entries. ERROR: directory not properly formatted.Each .. entry in directory refers to the proper parent inode, and parent inode points back to it. ERROR: parent directory mismatch.
+For in-use inodes, each address in use is also marked in use in the bitmap. ERROR: address used by inode but marked free in bitmap.
+For blocks marked in-use in bitmap, actually is in-use in an inode or indirect block somewhere. ERROR: bitmap marks block in use but it is not in use.
+For in-use inodes, any address in use is only used once. ERROR: address used more than once.
+For inodes marked used in inode table, must be referred to in at least one directory. ERROR: inode marked use but not found in a directory.
+For inode numbers referred to in a valid directory, actually marked in use in inode table. ERROR: inode referred to in directory but marked free.
+Reference counts (number of links) for regular files match the number of times file is referred to in directories (i.e., hard links work correctly). ERROR: bad reference count for file.
+No extra links allowed for directories (each directory only appears in once)
+Testing-	
+Image with no issues:
+./fscheck working.img
+
+Image without root node error:
+./fscheck error2-NoRootDir.img
+
+2. (File Integrity Checker)
+
+The file check is done by using a checksum code which ensures the file is consistent by generating one when writing to file and storing it in the inode corresponding to the file and then cross checking the checksum when reading from the file later. This is implemented by using a new flag during file creation called T_CHECKED and O_CHECKED for the representation and creation respectively. Once this is done, the checksum (using xor) is implemented and stored in the struct. 
+
+The testing for this section is done by creating a file using checksum (type 4) and then writing to the file and printing its attributes using the modified file stat system call. It also verifies the integrity of the file by reopening it- in case of a mismatch in checksums-> an error code will be output. The test code is run as follows:
+make qemu
+ls xyz.txt
